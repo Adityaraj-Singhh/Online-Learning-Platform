@@ -596,11 +596,20 @@ exports.enrollFreeCourse = async (req, res) => {
     );
 
     // Create course progress
-    await CourseProgress.create({
+    const courseProgress = await CourseProgress.create({
       courseID: courseId,
       userId: userId,
       completedVideos: [],
     });
+
+    // Add course progress to user
+    await User.findByIdAndUpdate(
+      userId,
+      {
+        $push: { courseProgress: courseProgress._id },
+      },
+      { new: true }
+    );
 
     return res.status(200).json({
       success: true,
