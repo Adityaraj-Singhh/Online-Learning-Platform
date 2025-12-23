@@ -210,10 +210,10 @@ app.use(cookieParser());
 app.use(
 	cors({
 		origin: [
-      // "https://study-notion-taupe-gamma.vercel.app", // your deployed frontend
-      "http://localhost:3000", // (optional) for local dev
+      "http://localhost:3000", // for local dev
+      "https://online-learning-platform-psi-olive.vercel.app", // Your deployed frontend
       "https://studynotion-sv91.vercel.app",
-      "https://studynotion-4dre.vercel.app/"
+      "https://studynotion-4dre.vercel.app"
     ],
 		credentials:true,
 	})
