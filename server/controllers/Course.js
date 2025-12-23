@@ -25,6 +25,7 @@ exports.createCourse = async (req, res) => {
       category,
       status,
       instructions: _instructions,
+      isFree,
     } = req.body
     // Get thumbnail image from request files
     // const thumbnail = req.files.thumbnailImage
@@ -37,6 +38,14 @@ if (isNaN(price)) {
     success: false,
     message: "Price must be a valid number",
   });
+}
+
+// ✅ Convert isFree to boolean
+isFree = isFree === "true" || isFree === true;
+
+// ✅ If course is free, set price to 0
+if (isFree) {
+  price = 0;
 }
 
 const thumbnail = req.files.thumbnailImage;
@@ -61,7 +70,6 @@ console.log(thumbnail);
       !courseName ||
       !courseDescription ||
       !whatYouWillLearn ||
-      !price ||
       !tag.length ||
       !thumbnail ||
       !category ||
@@ -70,6 +78,14 @@ console.log(thumbnail);
       return res.status(400).json({
         success: false,
         message: "All Fields are Mandatory",
+      })
+    }
+    
+    // Check if price is required (only when course is not free)
+    if (!isFree && (price === undefined || price === null)) {
+      return res.status(400).json({
+        success: false,
+        message: "Price is required for paid courses",
       })
     }
     if (!status || status === undefined) {
@@ -115,6 +131,7 @@ const thumbnailImage = await uploadImageToCloudinary(
       instructor: instructorDetails._id,
       whatYouWillLearn: whatYouWillLearn,
       price,
+      isFree,
       tag,
       category: categoryDetails._id,
       thumbnail: thumbnailImage.secure_url,
@@ -518,5 +535,83 @@ exports.deleteCourse = async (req, res) => {
       message: "Server error",
       error: error.message,
     })
+  }
+}
+
+// Enroll in a free course
+exports.enrollFreeCourse = async (req, res) => {
+  try {
+    const { courseId } = req.body;
+    const userId = req.user.id;
+
+    // Validate input
+    if (!courseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Course ID is required",
+      });
+    }
+
+    // Find the course
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    // Check if course is free
+    if (!course.isFree) {
+      return res.status(400).json({
+        success: false,
+        message: "This course is not free. Please use payment flow.",
+      });
+    }
+
+    // Check if user is already enrolled
+    if (course.studentsEnrolled.includes(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "You are already enrolled in this course",
+      });
+    }
+
+    // Enroll the student
+    await Course.findByIdAndUpdate(
+      courseId,
+      {
+        $push: { studentsEnrolled: userId },
+      },
+      { new: true }
+    );
+
+    // Add course to user's courses
+    await User.findByIdAndUpdate(
+      userId,
+      {
+        $push: { courses: courseId },
+      },
+      { new: true }
+    );
+
+    // Create course progress
+    await CourseProgress.create({
+      courseID: courseId,
+      userId: userId,
+      completedVideos: [],
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Successfully enrolled in the course",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to enroll in course",
+      error: error.message,
+    });
   }
 }

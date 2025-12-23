@@ -22,6 +22,7 @@ const {
   GET_FULL_COURSE_DETAILS_AUTHENTICATED,
   CREATE_RATING_API,
   LECTURE_COMPLETION_API,
+  ENROLL_FREE_COURSE_API,
 } = courseEndpoints
 
 export const getAllCourses = async () => {
@@ -385,4 +386,29 @@ export const createRating = async (data, token) => {
   }
   toast.dismiss(toastId)
   return success
+}
+
+// Enroll in a free course
+export const enrollFreeCourse = async (courseId, token, navigate) => {
+  const toastId = toast.loading("Enrolling...")
+  try {
+    const response = await apiConnector(
+      "POST",
+      ENROLL_FREE_COURSE_API,
+      { courseId },
+      {
+        Authorization: `Bearer ${token}`,
+      }
+    )
+    console.log("ENROLL FREE COURSE API RESPONSE............", response)
+    if (!response?.data?.success) {
+      throw new Error(response?.data?.message || "Could Not Enroll in Course")
+    }
+    toast.success("Successfully enrolled in the course!")
+    navigate("/dashboard/enrolled-courses")
+  } catch (error) {
+    console.log("ENROLL FREE COURSE API ERROR............", error)
+    toast.error(error?.response?.data?.message || error.message)
+  }
+  toast.dismiss(toastId)
 }

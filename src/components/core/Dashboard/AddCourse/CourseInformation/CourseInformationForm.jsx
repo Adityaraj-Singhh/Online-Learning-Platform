@@ -31,6 +31,7 @@ export default function CourseInformationForm() {
   const { course, editCourse } = useSelector((state) => state.course)
   const [loading, setLoading] = useState(false)
   const [courseCategories, setCourseCategories] = useState([])
+  const [isFree, setIsFree] = useState(false)
 
   useEffect(() => {
     const getCategories = async () => {
@@ -53,6 +54,7 @@ export default function CourseInformationForm() {
       setValue("courseCategory", course.category)
       setValue("courseRequirements", course.instructions)
       setValue("courseImage", course.thumbnail)
+      setIsFree(course.isFree || false)
     }
     getCategories()
 
@@ -230,7 +232,8 @@ const onSubmit = async (data) => {
   const formData = new FormData();
   formData.append("courseName", data.courseTitle);
   formData.append("courseDescription", data.courseShortDesc);
-  formData.append("price", priceNumber); // ✅ send number
+  formData.append("price", isFree ? 0 : priceNumber); // ✅ send 0 if free
+  formData.append("isFree", isFree); // ✅ send isFree flag
   formData.append("tag", JSON.stringify(data.courseTags));
   formData.append("whatYouWillLearn", data.courseBenefits);
   formData.append("category", data.courseCategory);
@@ -293,7 +296,27 @@ const onSubmit = async (data) => {
           </span>
         )}
       </div>
+      {/* Is Free Checkbox */}
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="isFree"
+          checked={isFree}
+          onChange={(e) => {
+            setIsFree(e.target.checked)
+            if (e.target.checked) {
+              setValue("coursePrice", 0)
+            }
+          }}
+          className="w-4 h-4"
+        />
+        <label className="text-sm text-richblack-5" htmlFor="isFree">
+          This is a free course
+        </label>
+      </div>
+      
       {/* Course Price */}
+      {!isFree && (
       <div className="flex flex-col space-y-2">
         <label className="text-sm text-richblack-5" htmlFor="coursePrice">
           Course Price <sup className="text-pink-200">*</sup>
@@ -324,6 +347,7 @@ const onSubmit = async (data) => {
           </span>
         )}
       </div>
+      )}
       {/* Course Category */}
       <div className="flex flex-col space-y-2">
         <label className="text-sm text-richblack-5" htmlFor="courseCategory">

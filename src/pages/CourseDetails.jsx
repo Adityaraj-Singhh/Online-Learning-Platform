@@ -11,7 +11,7 @@ import RatingStars from "../components/common/RatingStars"
 import CourseAccordionBar from "../components/core/Course/CourseAccordionBar"
 import CourseDetailsCard from "../components/core/Course/CourseDetailsCard"
 import { formatDate } from "../services/formatDate"
-import { fetchCourseDetails } from "../services/operations/courseDetailsAPI"
+import { fetchCourseDetails, enrollFreeCourse } from "../services/operations/courseDetailsAPI"
 import { buyCourse } from "../services/operations/studentFeaturesAPI"
 import GetAvgRating from "../utils/avgRating"
 import Error from "./Error"
@@ -99,10 +99,16 @@ function CourseDetails() {
     instructor,
     studentsEnrolled,
     createdAt,
+    isFree,
   } = response.data?.courseDetails
 
   const handleBuyCourse = () => {
     if (token) {
+      // Check if course is free
+      if (isFree) {
+        enrollFreeCourse(courseId, token, navigate)
+        return
+      }
       buyCourse(token, [courseId], user, navigate, dispatch)
       return
     }
@@ -172,12 +178,12 @@ function CourseDetails() {
             </div>
             <div className="flex w-full flex-col gap-4 border-y border-y-richblack-500 py-4 lg:hidden">
               <p className="space-x-3 pb-4 text-3xl font-semibold text-richblack-5">
-                Rs. {price}
+                {isFree ? "Free" : `Rs. ${price}`}
               </p>
               <button className="yellowButton" onClick={handleBuyCourse}>
-                Buy Now
+                {isFree ? "Enroll Now" : "Buy Now"}
               </button>
-              <button className="blackButton">Add to Cart</button>
+              {!isFree && <button className="blackButton">Add to Cart</button>}
             </div>
           </div>
           {/* Courses Card */}
