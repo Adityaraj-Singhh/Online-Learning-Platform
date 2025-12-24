@@ -412,19 +412,27 @@ exports.getFullCourseDetails = async (req, res) => {
       })
       .exec()
 
-    let courseProgressCount = await CourseProgress.findOne({
-      courseID: courseId,
-      userId: userId,
-    })
-
-    console.log("courseProgressCount : ", courseProgressCount)
-
     if (!courseDetails) {
       return res.status(400).json({
         success: false,
         message: `Could not find course with id: ${courseId}`,
       })
     }
+
+    // Check if user is enrolled in the course
+    if (!courseDetails.studentsEnrolled.includes(userId)) {
+      return res.status(403).json({
+        success: false,
+        message: `You are not enrolled in this course`,
+      })
+    }
+
+    let courseProgressCount = await CourseProgress.findOne({
+      courseID: courseId,
+      userId: userId,
+    })
+
+    console.log("courseProgressCount : ", courseProgressCount)
 
     // if (courseDetails.status === "Draft") {
     //   return res.status(403).json({

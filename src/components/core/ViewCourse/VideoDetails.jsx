@@ -39,7 +39,8 @@ const VideoDetails = () => {
         const filteredVideoData = filteredData?.[0]?.subSection.filter(
           (data) => data._id === subSectionId
         )
-        // console.log("filteredVideoData", filteredVideoData)
+        console.log("🎥 Video Data:", filteredVideoData[0])
+        console.log("🎥 Video URL:", filteredVideoData[0]?.videoUrl)
         setVideoData(filteredVideoData[0])
         setPreviewSource(courseEntireData.thumbnail)
         setVideoEnded(false)
