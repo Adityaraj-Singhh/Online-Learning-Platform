@@ -1,147 +1,39 @@
 // Import necessary modules
 const Section = require("../models/Section")
 const SubSection = require("../models/SubSection")
-// const { uploadImageToCloudinary } = require("../utils/imageUploader")
+const { uploadImageToCloudinary } = require("../utils/imageUploader")
 
 // Create a new sub-section for a given section
-// exports.createSubSection = async (req, res) => {
-//   try {
-//     // Extract necessary information from the request body
-//     const { sectionId, title, description } = req.body
-//     const video = req.files.video;
-
-//     // Check if all necessary fields are provided
-//     if (!sectionId || !title || !description || !video) {
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "All Fields are Required" })
-//     }
-//     console.log(video)
-
-//     // Upload the video file to Cloudinary
-//     const uploadDetails = await uploadImageToCloudinary(
-//       video,
-//       process.env.FOLDER_NAME
-//     )
-//     console.log(uploadDetails)
-//     // Create a new sub-section with the necessary information
-//     const SubSectionDetails = await SubSection.create({
-//       title: title,
-//       timeDuration: `${uploadDetails.duration}`,
-//       description: description,
-//       videoUrl: uploadDetails.secure_url,
-//     })
-
-//     // Update the corresponding section with the newly created sub-section
-//     const updatedSection = await Section.findByIdAndUpdate(
-//       { _id: sectionId },
-//       { $push: { subSection: SubSectionDetails._id } },
-//       { new: true }
-//     ).populate("subSection")
-
-//     // Return the updated section in the response
-//     return res.status(200).json({ success: true, data: updatedSection })
-//   } catch (error) {
-//     // Handle any errors that may occur during the process
-//     console.error("Error creating new sub-section:", error)
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//       error: error.message,
-//     })
-//   }
-// }
-
-
-// console.log("HEllooo betaaaaaa");
-// // Create a new sub-section for a given section
-// exports.createSubSection = async (req, res) => {
-//     console.log("👉 Inside createSubSection now...");
-//   try {
-//     console.log("logs BODY:", req.body);
-//     console.log("logs FILES:", req.files);
-
-//     const { sectionId, title, description } = req.body;
-//     // const video = req.files?.video; // get the uploaded video file
-//     const video = req.files?.video; 
-//     console.log(req.files);
-
-//     // ✅ Validate input
-//     if (!sectionId || !title || !description || !video) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "All fields (sectionId, title, description, video) are required",
-//       });
-//     }
-
-//     // ✅ Upload video to Cloudinary
-//     const uploadDetails = await uploadImageToCloudinary(
-//       video.tempFilePath, // ✅ express-fileupload provides tempFilePath
-//       process.env.FOLDER_NAME
-//     );
-//     console.log("Cloudinary Upload Details:", uploadDetails);
-
-//     // ✅ Create a new SubSection document
-//     const subSection = await SubSection.create({
-//       title: title,
-//       timeDuration: `${uploadDetails.duration}`,
-//       description: description,
-//       videoUrl: uploadDetails.secure_url,
-//     });
-
-//     // ✅ Push the new SubSection into the Section
-//     const updatedSection = await Section.findByIdAndUpdate(
-//       sectionId,
-//       { $push: { subSection: subSection._id } },
-//       { new: true }
-//     ).populate("subSection");
-
-//     if (!updatedSection) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Section not found",
-//       });
-//     }
-
-//     // ✅ Success response
-//     return res.status(200).json({
-//       success: true,
-//       message: "Sub-section created successfully",
-//       data: updatedSection,
-//     });
-//   } catch (error) {
-//     console.error("Error creating sub-section:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal Server Error",
-//       error: error.message,
-//     });
-//   }
-// };
-
-// Create a new sub-section for a given section (NO CLOUDINARY, NO FILE UPLOAD)
 exports.createSubSection = async (req, res) => {
   try {
-    console.log("👉 Inside createSubSection (NO CLOUDINARY)");
-
+    console.log("👉 Inside createSubSection");
     console.log("logs BODY:", req.body);
+    console.log("logs FILES:", req.files);
 
-    const { sectionId, title, description, videoUrl } = req.body;
+    const { sectionId, title, description } = req.body;
+    const video = req.files?.video;
 
-    // ✅ Validate fields (no req.files now)
-    if (!sectionId || !title || !description || !videoUrl) {
+    // ✅ Validate input
+    if (!sectionId || !title || !description || !video) {
       return res.status(400).json({
         success: false,
-        message: "All fields (sectionId, title, description, videoUrl) are required",
+        message: "All fields (sectionId, title, description, video) are required",
       });
     }
+
+    // ✅ Upload video to Cloudinary
+    const uploadDetails = await uploadImageToCloudinary(
+      video.tempFilePath,
+      process.env.FOLDER_NAME
+    );
+    console.log("✅ Cloudinary Upload Details:", uploadDetails);
 
     // ✅ Create a new SubSection document
     const subSection = await SubSection.create({
       title: title,
-      timeDuration: "00:02", // dummy duration
+      timeDuration: `${uploadDetails.duration}`,
       description: description,
-      videoUrl: videoUrl, // directly use the provided URL
+      videoUrl: uploadDetails.secure_url,
     });
 
     // ✅ Push the new SubSection into the Section
@@ -158,11 +50,11 @@ exports.createSubSection = async (req, res) => {
       });
     }
 
-    console.log("✅ Subsection created (no cloudinary):", subSection);
+    console.log("✅ Subsection created with video:", subSection);
 
     return res.status(200).json({
       success: true,
-      message: "Sub-section created successfully (no cloudinary)",
+      message: "Sub-section created successfully",
       data: updatedSection,
     });
 
@@ -181,10 +73,11 @@ exports.createSubSection = async (req, res) => {
 
 
 
-// ✅ Update an existing sub-section (NO CLOUDINARY)
+// ✅ Update an existing sub-section with video upload
 exports.updateSubSection = async (req, res) => {
   try {
-    const { sectionId, subSectionId, title, description, videoUrl } = req.body;
+    const { sectionId, subSectionId, title, description } = req.body;
+    const video = req.files?.video;
 
     // Find existing sub-section
     const subSection = await SubSection.findById(subSectionId);
@@ -204,10 +97,14 @@ exports.updateSubSection = async (req, res) => {
       subSection.description = description;
     }
 
-    // ✅ Instead of Cloudinary upload, just update videoUrl if you pass it
-    if (videoUrl !== undefined) {
-      subSection.videoUrl = videoUrl; // you can pass a dummy or actual URL
-      subSection.timeDuration = "00:02"; // dummy duration
+    // ✅ If video file is provided, upload to Cloudinary
+    if (video) {
+      const uploadDetails = await uploadImageToCloudinary(
+        video.tempFilePath,
+        process.env.FOLDER_NAME
+      );
+      subSection.videoUrl = uploadDetails.secure_url;
+      subSection.timeDuration = `${uploadDetails.duration}`;
     }
 
     // Save the updated sub-section
@@ -216,11 +113,11 @@ exports.updateSubSection = async (req, res) => {
     // Find the parent section and return with populated sub-sections
     const updatedSection = await Section.findById(sectionId).populate("subSection");
 
-    console.log("✅ Updated section (no Cloudinary):", updatedSection);
+    console.log("✅ Updated section:", updatedSection);
 
     return res.status(200).json({
       success: true,
-      message: "Sub-section updated successfully (no Cloudinary)",
+      message: "Sub-section updated successfully",
       data: updatedSection,
     });
   } catch (error) {
